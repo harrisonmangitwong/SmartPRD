@@ -3,185 +3,164 @@
 import { useMemo, useState } from 'react';
 
 const questionTabs = [
-  { id: 'needs-answer', label: 'Needs response' },
-  { id: 'awaiting-review', label: 'Awaiting review' },
-  { id: 'answered', label: 'Answered' },
+  { id: 'unresolved', label: 'Unresolved' },
+  { id: 'resolved', label: 'Resolved' },
   { id: 'all', label: 'All' }
 ];
-
-const statusLabels = {
-  'needs-answer': 'Needs response',
-  'awaiting-review': 'Review scheduled',
-  answered: 'Answered'
-};
 
 const questions = [
   {
     id: 1,
-    author: 'William C',
-    role: 'PM',
-    avatar: 'WC',
-    timestamp: 'Nov 7, 9:18AM',
-    message: 'Designs call out a “final” analytics template—can we confirm we have the approved version uploaded?',
-    status: 'needs-answer',
-    detail: 'Waiting on design to drop the signed-off dashboard template before sharing digest.',
-    nextStep: 'Design to upload latest template for PM review.',
-    stakeholders: ['Maya (Design)', 'Luis (Eng)']
+    author: 'Sarah C',
+    role: 'UXR',
+    avatar: 'SC',
+    timestamp: 'Nov 4, 1:44PM',
+    message:
+      'Should summaries auto-post in the project Slack channel or only DM PMs?',
+    status: 'unresolved',
+    detail: 'Need to confirm collaboration expectations before rollout.',
+    followers: ['Kay M', 'David C']
   },
   {
     id: 2,
-    author: 'Maya P',
-    role: 'Design',
-    avatar: 'MP',
-    timestamp: 'Nov 6, 4:02PM',
-    message: 'If revenue leadership needs more context, should we include the churn mitigation appendix?',
-    status: 'awaiting-review',
-    detail: 'SmartPRD suggested appendix based on uploaded PRD; pending PM confirmation during review.',
-    nextStep: 'Discuss in Thursday review if appendix stays in digest.',
-    stakeholders: ['William (PM)', 'Jules (PMM)']
+    author: 'Kay M',
+    role: 'PMM',
+    avatar: 'KM',
+    timestamp: 'Nov 4, 12:15PM',
+    message:
+      'Can we highlight must-have vs nice-to-have accessibility improvements?',
+    status: 'follow-up',
+    detail: 'SmartPRD flagged missing priority labels.',
+    followers: ['Sarah C']
   },
   {
     id: 3,
-    author: 'Luis R',
+    author: 'David C',
     role: 'Engineering Lead',
-    avatar: 'LR',
-    timestamp: 'Nov 6, 10:37AM',
-    message: 'API error states aren’t represented in the digest timeline—okay to assume backend covers it?',
-    status: 'answered',
-    detail: 'Resolved via SmartPRD reply with link to PRD Risks section and owners.',
-    nextStep: 'Follow-up captured in engineering backlog.',
-    stakeholders: ['Ops (Review)', 'QA']
+    avatar: 'DC',
+    timestamp: 'Nov 3, 6:03PM',
+    message: 'Are the AI hallucination guardrails a v1 requirement or future work?',
+    status: 'resolved',
+    detail: 'Resolved in stand-up: v1 ships with preview gate only.',
+    followers: ['Jensen L']
   }
 ];
 
 const summaryUpdates = [
-  'Workspace synced with new “Revenue Dashboard Refresh” PRD upload.',
-  'Stakeholder digests now highlight unanswered board items at the top.',
-  'Review scheduled for Thu, Nov 9 with design, engineering, and PMM.',
-  'SmartPRD auto-tagged questions that require a live discussion.'
+  'Added Slack auto-post toggle.',
+  'Clarified AI hallucination preview gate ownership.',
+  'Documented accessibility contrast & focus states.',
+  'Streamlined focus outline styles for accessibility compliance.'
 ];
 
-const quickActions = [
+const smartHighlights = [
   {
-    title: 'Upload latest PRD source',
-    description: 'Drag in the approved doc or sync from Drive so SmartPRD can tailor context.',
-    cta: 'Upload file'
+    title: 'Slack Auto-Post',
+    content:
+      'Allow PMs to route meeting summaries directly to project Slack channels with optional DM notifications for stakeholders.'
   },
   {
-    title: 'Send tailored stakeholder digest',
-    description: 'Push an async recap focused on actions for design, eng, and leadership.',
-    cta: 'Share digest'
+    title: 'Accessibility Improvements',
+    content:
+      'Contrast ratios, keyboard focus traps, and clear session recap formatting ensure inclusive experiences across roles.'
   },
   {
-    title: 'Schedule live review',
-    description: 'If questions stay open, book time directly with all stakeholders.',
-    cta: 'Open calendar'
+    title: 'Design Space',
+    content:
+      'Interface prioritizes a calm, collaborative IA with emphasis on cross-functional clarity and fast comprehension.'
   }
-];
-
-const workflowSteps = [
-  {
-    title: '1. Create a SmartPRD project',
-    summary: 'Stand up a dedicated hub for every initiative the PM owns.',
-    items: [
-      'Name the project and capture what you need teammates to deliver.',
-      'Invite stakeholders so SmartPRD tailors updates for each role.',
-      'Upload the current PRD baseline or connect to a doc source.'
-    ]
-  },
-  {
-    title: '2. Navigate across active work',
-    summary: 'Jump between initiatives without losing context.',
-    items: [
-      'See all owned projects plus status at a glance.',
-      'Spot which workstreams are waiting on answers before the next meeting.',
-      'Keep SmartPRD synced with the latest docs and decisions.'
-    ]
-  },
-  {
-    title: '3. Run dynamic reviews',
-    summary: 'Let SmartPRD handle async prep so meetings are intentional.',
-    items: [
-      'Share tailored digests that answer “what do I need to know?”.',
-      'Track every question and response in the shared board.',
-      'Schedule time only when live alignment is still required.'
-    ]
-  },
-  {
-    title: '4. Stay anchored in project context',
-    summary: 'Every artifact and answer lives next to the PRD.',
-    items: [
-      'Reference the uploaded PRD beside SmartPRD callouts.',
-      'Highlight outstanding questions and owners in one view.',
-      'Log final decisions so follow-ups are easy to share later.'
-    ]
-  }
-];
-
-const stakeholderHighlights = [
-  {
-    title: 'What changed',
-    content: 'Revenue KPIs moved to the overview so leadership can scan outcomes first.'
-  },
-  {
-    title: 'Where to help',
-    content: 'Design review pending for analytics template and empty state walkthrough.'
-  },
-  {
-    title: 'Unanswered items',
-    content: 'Two needs-response questions remain—jump in before the live review.'
-  }
-];
-
-const metrics = [
-  { label: 'Questions resolved async this week', value: '6 of 8' },
-  { label: 'Stakeholder digests sent', value: '3 teams' },
-  { label: 'Next live review', value: 'Thu • Nov 9 • 2:00PM' }
 ];
 
 const prdSections = [
   {
-    title: 'Workspace foundations',
+    title: '1. Product Overview',
     items: [
-      'Create SmartPRD projects for each initiative and invite stakeholders immediately.',
-      'Upload or link the canonical PRD so SmartPRD can surface context in every view.',
-      'Keep project overview, success metrics, and owners front-and-center.'
+      'AI-powered platform streamlining PRD creation, review, and stakeholder alignment.',
+      'Automates meeting notes into focused, role-tailored PRD briefs.'
     ]
   },
   {
-    title: 'Review & alignment flow',
+    title: '2. Problem Statement',
     items: [
-      'Send role-aware digests so stakeholders arrive with answers in hand.',
-      'Use the dynamic question board to capture every follow-up and response.',
-      'Schedule a live review only if critical items stay unresolved.'
+      'PMs lose hours wrangling meeting artifacts into centralized documentation.',
+      'Teams lack visibility into open questions and decisions tracked across tools.'
     ]
   },
   {
-    title: 'Stakeholder experience',
+    title: '3. Goals & Non-Goals',
     items: [
-      'Deliver high-level summaries tailored to what each role needs.',
-      'Highlight unanswered questions and provide a clear place to respond.',
-      'Offer quick access to upload feedback or request additional context.'
+      'Reduce meeting time by 50% with automated summaries.',
+      'Enable PMs to orchestrate multiple projects with centralized Q&A.',
+      'Non-goals: replace Jira/Asana or deliver predictive forecasting.'
     ]
   },
   {
-    title: 'Success signals',
+    title: '4. Target Users',
     items: [
-      'Fewer recurring alignment meetings needed each sprint.',
-      'Stakeholders resolve open items inside SmartPRD before reviews.',
-      'Final PRD versions stay in sync across teams and tools.'
+      'Primary: PMs, Engineers, Designers, Data Scientists.',
+      'Each receives role-specific PRD views via SmartPRD tailoring.'
+    ]
+  },
+  {
+    title: '5. Key Features',
+    items: [
+      'Multi-project dashboard with AI prioritization.',
+      'Role-based PRD tailoring & auto-summaries to Slack.',
+      'AI Q&A assistant with context search & version history.',
+      'Integrations: Slack, Google Calendar, Jira/Confluence roadmap.'
+    ]
+  },
+  {
+    title: '6. Accessibility & Design',
+    items: [
+      'Adopts SmartPRD Design System (calm, collaborative IA).',
+      'Readable typography, focus states, and keyboard navigation compliance.'
+    ]
+  },
+  {
+    title: '7. Success Metrics',
+    items: [
+      '50% PRD meeting time reduction.',
+      '45% stakeholder satisfaction uplift.',
+      '90% review tasks completed within 48h.',
+      '40% time-to-feedback decrease.',
+      '<5% AI hallucination rate.'
+    ]
+  },
+  {
+    title: '8. Technical Requirements',
+    items: [
+      'Frontend: Next.js; Backend: FastAPI; Database: PostgreSQL.',
+      'Auth: OAuth; Storage: AWS S3; AI Engine: GPT-5.',
+      'Integrations: Slack, Google Calendar.'
+    ]
+  },
+  {
+    title: '9. Risks & Mitigations',
+    items: [
+      'AI hallucination — mitigate with human-in-loop preview gate.',
+      'Adoption risk — embed change management & champion enablement.',
+      'Data leakage — secure endpoints and audit trails.'
+    ]
+  },
+  {
+    title: '10. Future Enhancements',
+    items: [
+      'Jira/Confluence deep integrations.',
+      'Customizable stakeholder prompts & templates.',
+      'Enterprise-grade fine-tuned AI models.'
     ]
   }
 ];
 
-const prdFiles = [
-  { name: 'Revenue Dashboard Refresh — PRD v3', status: 'Current version', updated: 'Synced Nov 7' },
-  { name: 'Async stakeholder digest — Nov 6', status: 'Shared via Slack', updated: 'Sent Nov 6' },
-  { name: 'Churn mitigation appendix', status: 'Awaiting review', updated: 'Draft from PMM' }
+const metrics = [
+  { label: 'Review cycles completed <48h', value: '90% goal' },
+  { label: 'Slack adoption in pilot teams', value: '8/10 active' },
+  { label: 'AI hallucination rate', value: '<5% with preview gate' }
 ];
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState('needs-answer');
+  const [activeTab, setActiveTab] = useState('unresolved');
 
   const filteredQuestions = useMemo(() => {
     if (activeTab === 'all') return questions;
@@ -199,32 +178,28 @@ export default function HomePage() {
         <div className="nav-section">
           <div className="nav-title">Your Projects</div>
           <div className="project-item active">
-            <span>Cross-functional</span>
-            <strong>Revenue Dashboard Refresh</strong>
+            <span>AI Meeting Assistant</span>
+            <strong>AI Meeting Summary Assistant</strong>
           </div>
           <div className="project-item">
-            <span>Discovery</span>
-            <strong>Lifecycle Notifications</strong>
+            <span>UX/UX Research</span>
+            <strong>Basketball Stars</strong>
           </div>
           <div className="project-item">
             <span>Archived</span>
-            <strong>Onboarding Streamline</strong>
+            <strong>Bell Project</strong>
           </div>
         </div>
 
         <div className="nav-section">
           <div className="nav-title">Actions</div>
           <div className="project-item">
-            <strong>Answer board items</strong>
-            <span>Reply to remaining questions</span>
+            <strong>Schedule Meeting</strong>
+            <span>Create an alignment session</span>
           </div>
           <div className="project-item">
-            <strong>Share stakeholder digest</strong>
-            <span>Send tailored update to teams</span>
-          </div>
-          <div className="project-item">
-            <strong>Schedule review</strong>
-            <span>Book time if blockers remain</span>
+            <strong>Mark as Resolved</strong>
+            <span>Archive completed work</span>
           </div>
         </div>
 
@@ -241,11 +216,11 @@ export default function HomePage() {
         <header className="card">
           <div className="card-header">
             <div>
-              <div className="card-title">Revenue Dashboard Refresh</div>
-              <div className="card-subtitle">Live SmartPRD workspace • Updated Nov 7, 9:18AM</div>
+              <div className="card-title">AI Meeting Summary Assistant</div>
+              <div className="card-subtitle">Live PRD workspace • Updated Nov 4, 1:44PM</div>
             </div>
             <span className="badge" role="status">
-              <span aria-hidden="true">⚡</span> Synced from Drive 12m ago
+              <span aria-hidden="true">⚡</span> Synced 1h ago
             </span>
           </div>
           <div className="summary-list">
@@ -263,101 +238,51 @@ export default function HomePage() {
             <div className="card-header">
               <div>
                 <h2 id="document-heading" className="card-title">Product Requirements</h2>
-                <p className="card-subtitle">
-                  SmartPRD reduces unnecessary meetings by tailoring project context for every stakeholder.
-                </p>
+                <p className="card-subtitle">SmartPRD distilled the latest meeting notes into actionable updates.</p>
               </div>
-              <span className="tag">Share overview</span>
+              <span className="tag">Share to Slack</span>
             </div>
 
             <article className="document-content">
-              <h3>Product overview</h3>
+              <h3>Problem</h3>
               <p>
-                SmartPRD pulls the right details from your PRD, meeting notes, and prompts so PMs can keep teams aligned
-                without extra status meetings. Each project lives in a dedicated workspace with context, questions, and
-                actions in one place.
+                Manual PRD updates create silos, duplicated documentation, and missed follow-ups. PMs need
+                faster ways to transform meeting insights into role-aware PRD snippets.
               </p>
 
-              <h3>PM workflow</h3>
+              <h3>Proposed Solution</h3>
+              <p>
+                SmartPRD captures live meeting notes, summarizes decisions, highlights follow-up tasks, and
+                surfaces unanswered questions for PM review.
+              </p>
+
+              <h3>Key Callouts</h3>
               <ul>
-                <li>Create a SmartPRD project, invite every stakeholder, and upload the canonical PRD.</li>
-                <li>Navigate across initiatives to see which ones still need answers before the next checkpoint.</li>
-                <li>Let SmartPRD surface open questions, upcoming reviews, and role-based tasks.</li>
+                <li>Slack auto-post toggle requested by PMs for quick alignment.</li>
+                <li>Accessibility audit flagged focus states and contrast requirements.</li>
+                <li>Design system guidance: maintain calm, collaborative IA.</li>
+                <li>Guardrails: AI hallucination preview gate before publishing.</li>
               </ul>
 
-              <h3>Stakeholder experience</h3>
-              <ul>
-                <li>Receive a high-level digest focused on what unblocks their work.</li>
-                <li>Jump into the question board to answer or log follow-ups async.</li>
-                <li>Know if a meeting is required by checking unresolved items and scheduled reviews.</li>
-              </ul>
-
-              <h3>Key outcomes</h3>
-              <ul>
-                <li>Fewer ad-hoc alignment meetings; more decisions documented in SmartPRD.</li>
-                <li>PRD uploads and final versions stay current, so there is one trusted source.</li>
-                <li>Stakeholders understand next steps because context, questions, and decisions stay linked.</li>
-              </ul>
+              <h3>Team Notes</h3>
+              <p>
+                Kay (PMM) will own Slack launch comms. Jensen (Design) is updating SmartPRD UI kit with new
+                focus styles. Engineering to scope human-in-loop review for hallucination mitigation.
+              </p>
             </article>
           </section>
 
-          <aside className="card quick-actions-card" aria-labelledby="quick-actions-heading">
+          <aside className="card" aria-labelledby="summary-heading">
             <div className="card-header">
               <div>
-                <h2 id="quick-actions-heading" className="card-title">Quick actions</h2>
-                <p className="card-subtitle">Keep this workspace ready before the next review.</p>
+                <h2 id="summary-heading" className="card-title">SmartPRD Summary</h2>
+                <p className="card-subtitle">Context relevant to Product Manager</p>
               </div>
+              <span className="tag">See full PRD</span>
             </div>
 
-            <div className="quick-actions-list">
-              {quickActions.map((action) => (
-                <div key={action.title} className="quick-action">
-                  <div>
-                    <strong>{action.title}</strong>
-                    <p>{action.description}</p>
-                  </div>
-                  <button type="button">{action.cta}</button>
-                </div>
-              ))}
-            </div>
-          </aside>
-        </div>
-
-        <div className="content-columns">
-          <section className="card" aria-labelledby="workflow-heading">
-            <div className="card-header">
-              <div>
-                <h2 id="workflow-heading" className="card-title">PM workflow</h2>
-                <p className="card-subtitle">Follow this flow to keep SmartPRD working for you.</p>
-              </div>
-            </div>
-
-            <div className="workflow-steps">
-              {workflowSteps.map((step) => (
-                <article key={step.title} className="workflow-step">
-                  <div className="step-title">{step.title}</div>
-                  <p>{step.summary}</p>
-                  <ul>
-                    {step.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <aside className="card digest-card" aria-labelledby="digest-heading">
-            <div className="card-header">
-              <div>
-                <h2 id="digest-heading" className="card-title">Stakeholder digest</h2>
-                <p className="card-subtitle">What collaborators see when they check SmartPRD.</p>
-              </div>
-              <span className="tag">Preview digest</span>
-            </div>
-
-            <div className="summary-list digest-list">
-              {stakeholderHighlights.map((highlight) => (
+            <div className="summary-list">
+              {smartHighlights.map((highlight) => (
                 <div key={highlight.title} className="summary-item">
                   <div className="bullet" aria-hidden="true" />
                   <div>
@@ -376,8 +301,6 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-
-            <button type="button" className="outline-button">Share latest digest</button>
           </aside>
         </div>
 
@@ -386,9 +309,9 @@ export default function HomePage() {
             <div className="card-header">
               <div>
                 <h2 id="questions-heading" className="card-title">Questions</h2>
-                <p className="card-subtitle">SmartPRD captures every follow-up so you can respond before meetings.</p>
+                <p className="card-subtitle">SmartPRD routes unresolved questions to the right owners.</p>
               </div>
-              <span className="tag">Board view</span>
+              <span className="tag">Show unresolved</span>
             </div>
 
             <div className="questions-tabs" role="tablist" aria-label="Question filters">
@@ -409,15 +332,18 @@ export default function HomePage() {
               {filteredQuestions.map((question) => (
                 <article key={question.id} className="question-item">
                   <div className="question-meta">
-                    <span className={`status ${question.status}`}>{statusLabels[question.status]}</span>
+                    <span className={`status ${question.status}`}>
+                      {question.status === 'unresolved' && 'Unresolved'}
+                      {question.status === 'resolved' && 'Resolved'}
+                      {question.status === 'follow-up' && 'Follow-up'}
+                    </span>
                     <strong>{question.author}</strong>
                     <span>{question.role}</span>
                     <span>{question.timestamp}</span>
                   </div>
                   <p>{question.message}</p>
                   <p className="card-subtitle">{question.detail}</p>
-                  <div className="card-subtitle">Next step: {question.nextStep}</div>
-                  <div className="card-subtitle">Stakeholders: {question.stakeholders.join(', ')}</div>
+                  <div className="card-subtitle">Following: {question.followers.join(', ')}</div>
                 </article>
               ))}
             </div>
@@ -426,10 +352,10 @@ export default function HomePage() {
           <section className="card prd-card" aria-labelledby="prd-heading">
             <div className="card-header">
               <div>
-                <h2 id="prd-heading" className="card-title">SmartPRD — project context</h2>
-                <p className="card-subtitle">Everything tied to the core PRD stays in one place.</p>
+                <h2 id="prd-heading" className="card-title">SmartPRD — Product Requirements</h2>
+                <p className="card-subtitle">Centralized blueprint across discovery, build, and launch.</p>
               </div>
-              <span className="tag">Download</span>
+              <span className="tag">Download PDF</span>
             </div>
 
             <div className="prd-section">
@@ -444,44 +370,24 @@ export default function HomePage() {
                 </section>
               ))}
             </div>
-
-            <div className="prd-files">
-              <h3>Workspace documents</h3>
-              <ul>
-                {prdFiles.map((file) => (
-                  <li key={file.name}>
-                    <div>
-                      <strong>{file.name}</strong>
-                      <span>{file.status}</span>
-                    </div>
-                    <span>{file.updated}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="upload-area" role="region" aria-label="Upload the latest project PRD">
-              <p>Drop the final PRD or choose a file to keep SmartPRD current.</p>
-              <button type="button">Upload PRD</button>
-            </div>
           </section>
         </div>
 
         <section className="card ask-card" aria-labelledby="ask-heading">
           <div className="card-header">
             <div>
-              <h2 id="ask-heading" className="card-title">Log context or request support</h2>
-              <p className="card-subtitle">Capture new questions so SmartPRD routes them before the next sync.</p>
+              <h2 id="ask-heading" className="card-title">Ask SmartPRD or Your PM for clarification</h2>
+              <p className="card-subtitle">Keep everyone aligned by logging your questions in the shared workspace.</p>
             </div>
           </div>
 
           <form>
-            <textarea placeholder="Ask SmartPRD or your PM for updates..." aria-label="Ask SmartPRD a question" />
+            <textarea placeholder="Ask a question about the PRD..." aria-label="Ask SmartPRD a question" />
             <div className="actions">
               <label>
                 <input type="checkbox" /> Notify stakeholders in Slack
               </label>
-              <button type="button">Add to board</button>
+              <button type="button">Ask Question</button>
             </div>
           </form>
         </section>
